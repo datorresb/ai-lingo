@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from src.agents.agent import create_agent_workflow
+from src.agents.agent import build_llm, create_agent_workflow
 from src.core.expressions import parse_expressions
 from src.core.models import ChatRequest, Message, SessionRequest, SessionResponse, StartChatRequest, Topic
 from src.core.session_store import create_session, get_session, update_session
@@ -48,6 +48,18 @@ async def root() -> dict:
 async def health_check() -> dict:
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.get("/smoke")
+async def smoke_check() -> dict:
+    """Validate Azure OpenAI connectivity."""
+    try:
+        llm = build_llm()
+        llm.invoke([HumanMessage(content="ping")])
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="LLM unavailable") from exc
+
+    return {"status": "ok"}
 
 
 @app.post("/session", response_model=SessionResponse)
