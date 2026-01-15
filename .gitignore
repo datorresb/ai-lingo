@@ -22,3 +22,11 @@ Thumbs.db
 dist/
 build/
 *.tsbuildinfo
+
+# Python artifacts
+__pycache__/
+*.pyc
+.coverage
+
+# Test coverage
+coverage/
