@@ -1,5 +1,6 @@
 """Tests for FastAPI endpoints."""
 
+import os
 import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
@@ -125,3 +126,12 @@ def test_chat_endpoint_invalid_session() -> None:
     """Test /chat returns 404 for unknown session."""
     response = client.post("/chat", json={"session_id": "missing", "message": "Hi"})
     assert response.status_code == 404
+
+
+def test_smoke_endpoint_requires_azure_env() -> None:
+    """Smoke test hits Azure when env vars are configured."""
+    if not os.getenv("AZURE_OPENAI_ENDPOINT") or not os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"):
+        pytest.skip("Azure OpenAI env vars not set")
+
+    response = client.get("/smoke")
+    assert response.status_code == 200
