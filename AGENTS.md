@@ -18,6 +18,7 @@ This project uses **Mayor West Mode** - autonomous GitHub Copilot development wo
 2. **Always run tests before committing**
 3. **Use commit format**: `[MAYOR] <description>`
 4. **Include `Fixes #<issue>` in PR body**
+5. **Workflow cycle**: crear issue → implementar → PR a dev → merge → cerrar issue → continuar
 
 ## Development Commands
 
