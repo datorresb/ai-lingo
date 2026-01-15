@@ -33,11 +33,16 @@ interface ExpressionTextProps {
   className?: string
 }
 
+// Constants
+const TOOLTIP_VIEWPORT_MARGIN = 10 // Minimum distance from viewport edge in pixels
+
 /**
  * Parse text containing [[phrase::meaning]] markup into segments
  */
 function parseText(text: string): ParsedSegment[] {
   const segments: ParsedSegment[] = []
+  // Match [[phrase::meaning]] with non-greedy matching
+  // [^\]]+ ensures at least one character that's not a closing bracket
   const pattern = /\[\[([^\]]+?)::([^\]]+?)\]\]/g
   let lastIndex = 0
   let match
@@ -96,7 +101,7 @@ const HighlightedExpression: FC<HighlightedExpressionProps> = ({ phrase, meaning
       const tooltipRect = tooltipRef.current.getBoundingClientRect()
       
       // If tooltip would go off top of viewport, show it below instead
-      if (expressionRect.top - tooltipRect.height < 10) {
+      if (expressionRect.top - tooltipRect.height < TOOLTIP_VIEWPORT_MARGIN) {
         setTooltipPosition('bottom')
       } else {
         setTooltipPosition('top')
