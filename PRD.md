@@ -31,6 +31,12 @@ The **Expression Learner** is a conversational AI agent designed to help users l
     *   In the chat interface, idioms and expressions used by the agent are **visually highlighted**.
     *   Hovering over a highlight reveals a **tooltip** with a concise definition/meaning.
     *   The chat interface also shows the Agent's "Thought" process (inner monologue) separately from the final response.
+5.  **UI Controls (Single-Page):**
+    *   Header includes an editable language/dialect input and quick chips (**EN-US**, **EN-GB**, **ES-CO**, **ES-ES**, **FR-FR**, **FR-QC**).
+    *   Preference persists in `localStorage` and can be reset to **EN-US** without restarting the session.
+    *   Chat messages render with a typewriter effect.
+    *   Event log is visible on the right in desktop and in a drawer with a toggle on mobile.
+    *   Changing chips/language does not reset the session.
 
 ## 4. System Architecture
 
@@ -40,7 +46,7 @@ The **Expression Learner** is a conversational AI agent designed to help users l
     *   **Core Components:** `SessionSetup`, `Chat`, `EventLog` (for thoughts), `ExpressionText` (for highlighting).
 *   **Backend:** Python 3.12+, FastAPI.
 *   **AI Orchestration:** LangGraph (State Graph), LangChain.
-*   **LLM:** Azure OpenAI (GPT-3.5/4) via `langchain-openai`.
+*   **LLM:** Azure OpenAI (GPT-5.2) via `langchain-openai`.
 *   **Infrastructure:** Azure Container Apps (Bicep).
 
 ### 4.2. Folder Structure
@@ -76,6 +82,7 @@ demo-vibe-app/
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Metadata | - | Service info |
 | `GET` | `/health` | Liveness probe | - | `{"status": "healthy"}` |
+| `GET` | `/smoke` | LLM access validation | - | `{"status": "ok"}` |
 | `POST` | `/session` | Init session | `SessionRequest(variant)` | `SessionResponse(session_id, ...)` |
 | `POST` | `/chat` | Chat turn | `ChatRequest(session_id, message)` | `StreamingResponse` (SSE/text) |
 | `POST` | `/start_chat`| Start topic gen | `StartChatRequest(session_id)` | `StreamingResponse` |
@@ -120,6 +127,21 @@ The agent is instructed via System Prompt to mark idiomatic expressions in its r
     *   **Agent Message:** Rendered text. MUST use `ExpressionText` component to parse and render highlights.
 *   **`ExpressionText`:** Parses the agent's markup (e.g., Markdown or specific XML) to render interactive tooltips for idioms.
 *   **`EventLog`:** A side panel or drawer showing the "Thoughts" (intermediate steps from LangGraph/LangChain) to satisfy the "ReAct visible" requirement.
+*   **Single-page UI requirements:**
+    *   Header language input with quick chips (**EN-US**, **EN-GB**, **ES-CO**, **ES-ES**, **FR-FR**, **FR-QC**).
+    *   Persist language in `localStorage`; reset to **EN-US** without session restart.
+    *   Typewriter rendering for chat messages.
+    *   Event log docked right on desktop; drawer + toggle on mobile.
+    *   Chip changes must not reset session state.
+
+### 6.3. ReAct Visibility & Observability
+
+*   **ReAct visibility:** display `Thought → Action → Observation → Final` with Thought separated from final response.
+*   **Observability events (AG-UI):**
+    *   `assistant_message` (Final)
+    *   `assistant_message` with role `thought`
+    *   `tool_call` / `tool_result`
+    *   `state_update` with `variant`, `topic`, `turn_count`, `last_expressions`
 
 ## 7. Configuration & Environment
 
@@ -128,12 +150,23 @@ Required environment variables:
 *   `AZURE_OPENAI_DEPLOYMENT_NAME`
 *   `AZURE_OPENAI_API_VERSION`
 *   `AZURE_CLIENT_ID` (for Managed Identity)
+*   **Auth:** `DefaultAzureCredential` + `get_bearer_token_provider` for Azure OpenAI access.
 
-## 8. Success Criteria
+## 8. Dependencies & Tests
+
+### 8.1. Dependencies
+*   **Backend:** `fastapi`, `uvicorn`, `langchain-openai`, `langchain-core`, `langgraph`, `azure-identity`
+*   **Tooling:** `uv` for dependency management (no version pinning)
+
+### 8.2. Tests
+*   **Unit:** RSS parsing, expression extraction, Agent state updates
+*   **Integration:** LangGraph workflow with stubbed LLM
+*   **Smoke:** `/smoke` validates real LLM access
+
+## 9. Success Criteria
 
 1.  User can successfully start a session with a specific variant (e.g., UK).
 2.  Agent proposes real-world topics from RSS.
 3.  Agent responds in character.
 4.  Idioms in agent response are clickable/hoverable with correct definitions.
 5.  System deploys successfully to Azure Container Apps.
- 
