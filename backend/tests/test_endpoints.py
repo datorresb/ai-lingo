@@ -5,6 +5,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from src.core.session_store import get_session, reset_store
+from src.core import rss_client
+from src.core.models import Topic
 
 client = TestClient(app)
 
@@ -54,3 +56,34 @@ def test_session_endpoint_rejects_invalid_variant() -> None:
     response = client.post("/session", json={"variant": "ZZ"})
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid variant"
+
+
+def test_start_chat_endpoint_streams_topics(monkeypatch) -> None:
+    """Test /start_chat streams topic events."""
+    session = client.post("/session", json={"variant": "US"}).json()
+    session_id = session["session_id"]
+
+    def fake_topics(*_args, **_kwargs):
+        return {
+            "BBC": [
+                Topic(
+                    headline="News headline",
+                    source="BBC",
+                    url="https://example.com/news",
+                )
+            ]
+        }
+
+    monkeypatch.setattr(rss_client.get_client(), "get_topics_from_multiple_sources", fake_topics)
+
+    with client.stream("POST", "/start_chat", json={"session_id": session_id}) as response:
+        assert response.status_code == 200
+        lines = [line for line in response.iter_lines() if line]
+
+    assert any(line.startswith("data: ") for line in lines)
+
+
+def test_start_chat_endpoint_invalid_session() -> None:
+    """Test /start_chat returns 404 for unknown session."""
+    response = client.post("/start_chat", json={"session_id": "missing"})
+    assert response.status_code == 404
