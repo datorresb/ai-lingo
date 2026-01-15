@@ -6,7 +6,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.core.models import SessionRequest, SessionResponse, StartChatRequest, Topic
+from langchain_core.messages import AIMessage, HumanMessage
+
+from src.agents.agent import create_agent_workflow
+from src.core.expressions import parse_expressions
+from src.core.models import ChatRequest, Message, SessionRequest, SessionResponse, StartChatRequest, Topic
 from src.core.session_store import create_session, get_session, update_session
 from src.core.rss_client import get_client
 
@@ -100,6 +104,98 @@ async def start_chat_endpoint(request: StartChatRequest) -> StreamingResponse:
         update_session(request.session_id, topic=None)
 
     return StreamingResponse(topic_stream(), media_type="text/event-stream")
+
+
+def _to_langchain_messages(messages: list[Message]) -> list[HumanMessage | AIMessage]:
+    langchain_messages: list[HumanMessage | AIMessage] = []
+    for message in messages:
+        if message.role == "user":
+            langchain_messages.append(HumanMessage(content=message.content))
+        else:
+            langchain_messages.append(AIMessage(content=message.content))
+    return langchain_messages
+
+
+def _to_core_messages(messages: list[HumanMessage | AIMessage]) -> list[Message]:
+    core_messages: list[Message] = []
+    for message in messages:
+        if isinstance(message, HumanMessage):
+            core_messages.append(Message(role="user", content=message.content))
+        elif isinstance(message, AIMessage):
+            core_messages.append(Message(role="assistant", content=message.content))
+    return core_messages
+
+
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest) -> StreamingResponse:
+    """Chat endpoint that streams agent response."""
+
+    state = get_session(request.session_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    def chat_stream():
+        workflow = create_agent_workflow()
+        try:
+            langchain_messages = _to_langchain_messages(state.messages)
+            langchain_messages.append(HumanMessage(content=request.message))
+
+            result = workflow.invoke(
+                {
+                    "messages": langchain_messages,
+                    "variant": state.variant,
+                    "topic": state.topic,
+                    "last_expressions": state.last_expressions,
+                    "turn_count": state.turn_count,
+                }
+            )
+        except Exception:
+            payload = json.dumps({"type": "error", "content": "Agent error"})
+            yield f"data: {payload}\n\n"
+            return
+
+        messages = result.get("messages", [])
+        assistant_message = next(
+            (message for message in reversed(messages) if isinstance(message, AIMessage)), None
+        )
+
+        if assistant_message is None:
+            payload = json.dumps({"type": "error", "content": "No assistant response"})
+            yield f"data: {payload}\n\n"
+            return
+
+        expressions = parse_expressions(assistant_message.content)
+        updated_messages = _to_core_messages(messages)
+        update_session(
+            request.session_id,
+            messages=updated_messages,
+            last_expressions=expressions,
+            turn_count=result.get("turn_count", state.turn_count) or state.turn_count + 1,
+        )
+
+        thought_payload = json.dumps(
+            {"type": "thought", "content": "Thinking about your question."}
+        )
+        yield f"data: {thought_payload}\n\n"
+
+        text = assistant_message.content
+        chunk_size = 40
+        for idx in range(0, len(text), chunk_size):
+            payload = json.dumps({"type": "chunk", "content": text[idx : idx + chunk_size]})
+            yield f"data: {payload}\n\n"
+
+        expr_payload = json.dumps(
+            {
+                "type": "expressions",
+                "content": [expression.model_dump() for expression in expressions],
+            }
+        )
+        yield f"data: {expr_payload}\n\n"
+
+        done_payload = json.dumps({"type": "done"})
+        yield f"data: {done_payload}\n\n"
+
+    return StreamingResponse(chat_stream(), media_type="text/event-stream")
 
 
 if __name__ == "__main__":

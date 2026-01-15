@@ -2,8 +2,10 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from langchain_core.messages import AIMessage
 
 from app.main import app
+import app.main as main_module
 from src.core.session_store import get_session, reset_store
 from src.core import rss_client
 from src.core.models import Topic
@@ -86,4 +88,40 @@ def test_start_chat_endpoint_streams_topics(monkeypatch) -> None:
 def test_start_chat_endpoint_invalid_session() -> None:
     """Test /start_chat returns 404 for unknown session."""
     response = client.post("/start_chat", json={"session_id": "missing"})
+    assert response.status_code == 404
+
+
+def test_chat_endpoint_streams_response(monkeypatch) -> None:
+    """Test /chat streams agent response and expressions."""
+    session = client.post("/session", json={"variant": "US"}).json()
+    session_id = session["session_id"]
+
+    class FakeWorkflow:
+        def invoke(self, state):
+            return {
+                "messages": [
+                    *state["messages"],
+                    AIMessage(content="Hello [[a piece of cake::easy]]"),
+                ],
+                "turn_count": state["turn_count"] + 1,
+            }
+
+    monkeypatch.setattr(main_module, "create_agent_workflow", lambda: FakeWorkflow())
+
+    with client.stream(
+        "POST",
+        "/chat",
+        json={"session_id": session_id, "message": "Hi"},
+    ) as response:
+        assert response.status_code == 200
+        lines = [line for line in response.iter_lines() if line]
+
+    assert any("\"type\": \"chunk\"" in line for line in lines)
+    assert any("\"type\": \"expressions\"" in line for line in lines)
+    assert any("\"type\": \"done\"" in line for line in lines)
+
+
+def test_chat_endpoint_invalid_session() -> None:
+    """Test /chat returns 404 for unknown session."""
+    response = client.post("/chat", json={"session_id": "missing", "message": "Hi"})
     assert response.status_code == 404
