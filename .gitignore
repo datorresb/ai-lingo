@@ -23,6 +23,22 @@ dist/
 build/
 *.tsbuildinfo
 
+# Vite/Next/Tooling caches
+.vite/
+.next/
+.turbo/
+.eslintcache
+
+# Python virtualenvs & caches
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyo
+
+# OS/editor caches
+.cache/
+
 # Python artifacts
 __pycache__/
 *.pyc
