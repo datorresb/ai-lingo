@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "test": "cd backend && pytest"
+  },
   "dependencies": {
     "mayor-west-mode": "github:shyamsridhar123/MayorWest"
   }
