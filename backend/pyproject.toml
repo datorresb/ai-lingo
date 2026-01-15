@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,26 +10,29 @@ requires-python = ">=3.12"
 authors = [{name = "AI Lingo Team"}]
 license = {text = "MIT"}
 # See PRD for architecture and requirements
+# Note: No type checking enforcement (see PRD section 4.1)
 
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "pydantic>=2.5.0",
-    "pydantic-settings>=2.1.0",
-    "langchain>=0.1.0",
-    "langchain-openai>=0.0.5",
-    "langgraph>=0.0.30",
-    "python-dotenv>=1.0.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "langchain",
+    "langchain-openai",
+    "langgraph",
+    "python-dotenv",
+    "feedparser",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "pytest-mock",
+    "black",
+    "ruff",
+    "mypy",
 ]
 
 [tool.setuptools]
