@@ -35,6 +35,13 @@ Fixes #<issue-number>
 - `git reset --hard` - destroys history
 - `git push --force` to main - dangerous
 - `kill -9` - process termination
+- **NEVER** merge or push directly to `main` branch
+
+### Branching Strategy
+- **ALWAYS** create feature branches from `dev`
+- **ALWAYS** push to and merge PRs against `dev` branch
+- **NEVER** create PRs against `main` branch
+- `main` is protected and only for production releases
 
 ### Safe Commands (Auto-approved)
 - `npm test`, `npm run lint`, `npm run build`

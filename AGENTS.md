@@ -26,3 +26,46 @@ npm install           # Install dependencies
 npm test              # Run tests
 npm run lint          # Lint code
 ```
+
+## Available Skills
+
+### React Best Practices
+**Location:** `.github/skills/react-best-practices/`
+
+Vercel's comprehensive React and Next.js performance optimization guidelines. Contains 45 rules across 8 categories:
+
+1. **Eliminating Waterfalls** (CRITICAL) - `async-*` prefix
+   - Defer/parallelize promises, use Suspense for streaming
+   
+2. **Bundle Size Optimization** (CRITICAL) - `bundle-*` prefix
+   - Dynamic imports, barrel avoidance, conditional loading
+   
+3. **Server-Side Performance** (HIGH) - `server-*` prefix
+   - React.cache(), LRU caching, data serialization
+   
+4. **Re-render Optimization** (MEDIUM) - `rerender-*` prefix
+   - Memoization, dependencies, state management
+   
+5. **Rendering Performance** (MEDIUM) - `rendering-*` prefix
+   - SVG optimization, content-visibility, hydration
+   
+6. **JavaScript Performance** (LOW-MEDIUM) - `js-*` prefix
+   - DOM batching, lookup optimization, algorithm efficiency
+
+**Apply when:** Writing React components, Next.js pages, optimizing performance, reviewing code.
+
+### Web Design Guidelines
+**Location:** `.github/skills/web-design-guidelines/`
+
+Vercel's web interface design and accessibility guidelines. Fetches latest rules from:
+```
+https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
+```
+
+**Apply when:** Reviewing UI code, checking accessibility, auditing design, reviewing UX compliance.
+
+## Skill References
+
+When working on tasks:
+- **Frontend/React work:** Reference `.github/skills/react-best-practices/SKILL.md` and rules
+- **UI/Design review:** Reference `.github/skills/web-design-guidelines/SKILL.md`

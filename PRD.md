@@ -38,7 +38,7 @@ The **Expression Learner** is a conversational AI agent designed to help users l
 
 *   **Frontend:** React, Vite, TypeScript, Tailwind CSS (or custom CSS).
     *   **Core Components:** `SessionSetup`, `Chat`, `EventLog` (for thoughts), `ExpressionText` (for highlighting).
-*   **Backend:** Python 3.13+, FastAPI.
+*   **Backend:** Python 3.12+, FastAPI.
 *   **AI Orchestration:** LangGraph (State Graph), LangChain.
 *   **LLM:** Azure OpenAI (GPT-3.5/4) via `langchain-openai`.
 *   **Infrastructure:** Azure Container Apps (Bicep).
