@@ -27,5 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Build artifacts (TypeScript compilation may generate these)
 vite.config.js
 vite.config.d.ts

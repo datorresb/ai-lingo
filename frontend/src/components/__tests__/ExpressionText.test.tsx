@@ -10,7 +10,7 @@
  * 6. Edge cases (nested brackets, special chars, empty text)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ExpressionText from '../ExpressionText'
