@@ -1,5 +1,5 @@
 import { FC, FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import ExpressionText from './ExpressionText'
+import MarkdownMessage from './MarkdownMessage'
 import { useChatContext } from '../context/ChatContext'
 import { Topic } from '../hooks/useAGUIChat'
 
@@ -135,7 +135,7 @@ const Chat: FC = () => {
                                         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm sm:text-base shadow-sm ${bubbleClass}`}
                                     >
                                         {message.role === 'assistant' ? (
-                                            <ExpressionText text={message.content} />
+                                            <MarkdownMessage content={message.content} />
                                         ) : (
                                             <span>{message.content}</span>
                                         )}
