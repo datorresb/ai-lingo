@@ -192,7 +192,7 @@ describe('useAGUIChat Hook', () => {
         ok: true,
       } as Response
 
-      global.fetch = vi.fn().mockResolvedValue(mockStream)
+      globalThis.fetch = vi.fn().mockResolvedValue(mockStream)
 
       await act(async () => {
         await result.current.startTopicChat()
@@ -234,7 +234,7 @@ describe('useAGUIChat Hook', () => {
         ok: true,
       } as Response
 
-      global.fetch = vi.fn().mockResolvedValue(mockStream)
+      globalThis.fetch = vi.fn().mockResolvedValue(mockStream)
 
       await act(async () => {
         await result.current.startTopicChat()
@@ -286,7 +286,7 @@ describe('useAGUIChat Hook', () => {
         ok: true,
       } as Response
 
-      global.fetch = vi.fn().mockResolvedValue(mockStream)
+      globalThis.fetch = vi.fn().mockResolvedValue(mockStream)
 
       await act(async () => {
         await result.current.sendMessage('What is hello?')
@@ -458,9 +458,64 @@ describe('useAGUIChat Hook', () => {
         await result.current.sendMessage('Question?')
       })
 
-      expect(result.current.events).toHaveLength(1)
-      expect(result.current.events[0].type).toBe('thought')
-      expect(result.current.events[0].content).toBe('Thinking about the question')
+      const thoughtEvents = result.current.events.filter((event) => event.type === 'thought')
+      expect(thoughtEvents).toHaveLength(1)
+      expect(thoughtEvents[0].content).toBe('Thinking about the question')
+    })
+
+    it('should capture tool and state events', async () => {
+      const mockSessionId = 'session-123'
+      vi.mocked(axios.post).mockResolvedValue({
+        data: { session_id: mockSessionId },
+      })
+
+      const { result } = renderHook(() => useAGUIChat())
+
+      await act(async () => {
+        await result.current.startSession('us')
+      })
+
+      const mockStream = {
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode(
+                'data: {"type":"tool_call","content":{"name":"list_topics"}}\n'
+              )
+            )
+            controller.enqueue(
+              new TextEncoder().encode(
+                'data: {"type":"tool_result","content":"Topic list"}\n'
+              )
+            )
+            controller.enqueue(
+              new TextEncoder().encode(
+                'data: {"type":"state_update","content":{"turn":1}}\n'
+              )
+            )
+            controller.enqueue(
+              new TextEncoder().encode('data: {"type":"chunk","content":"Final"}\n')
+            )
+            controller.enqueue(
+              new TextEncoder().encode('data: {"type":"done"}\n')
+            )
+            controller.close()
+          },
+        }),
+        ok: true,
+      } as Response
+
+      global.fetch = vi.fn().mockResolvedValue(mockStream)
+
+      await act(async () => {
+        await result.current.sendMessage('Check tools')
+      })
+
+      const types = result.current.events.map((event) => event.type)
+      expect(types).toContain('tool_call')
+      expect(types).toContain('tool_result')
+      expect(types).toContain('state_update')
+      expect(types).toContain('response')
     })
   })
 
@@ -586,7 +641,7 @@ describe('useAGUIChat Hook', () => {
         await result.current.startSession('us')
       })
 
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
 
       await act(async () => {
         await result.current.sendMessage('Test')
@@ -611,7 +666,7 @@ describe('useAGUIChat Hook', () => {
         ok: false,
       } as Response
 
-      global.fetch = vi.fn().mockResolvedValue(mockStream)
+      globalThis.fetch = vi.fn().mockResolvedValue(mockStream)
 
       await act(async () => {
         await result.current.sendMessage('Test')
