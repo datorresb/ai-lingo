@@ -99,10 +99,8 @@ export const useAGUIChat = (): UseAGUIChatReturn => {
         let streamDone = false;
         while (!streamDone) {
           const { done, value } = await reader.read();
-          if (done) {
-            streamDone = true;
-            break;
-          }
+          if (done) break;
+          streamDone = done;
 
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n');
