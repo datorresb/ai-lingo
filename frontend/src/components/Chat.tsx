@@ -1,6 +1,7 @@
 import { FC, FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import ExpressionText from './ExpressionText'
-import { Topic, useAGUIChat } from '../hooks/useAGUIChat'
+import { useChatContext } from '../context/ChatContext'
+import { Topic } from '../hooks/useAGUIChat'
 
 const Chat: FC = () => {
     const {
@@ -12,7 +13,7 @@ const Chat: FC = () => {
         error,
         startTopicChat,
         sendMessage,
-    } = useAGUIChat()
+    } = useChatContext()
 
     const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
     const [draft, setDraft] = useState('')
