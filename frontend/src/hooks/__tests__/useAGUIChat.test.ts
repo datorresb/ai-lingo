@@ -37,6 +37,7 @@ describe('useAGUIChat Hook', () => {
       expect(result.current.sessionId).toBeNull()
       expect(result.current.variant).toBeNull()
       expect(result.current.topic).toBeNull()
+      expect(result.current.topics).toEqual([])
       expect(result.current.messages).toEqual([])
       expect(result.current.events).toEqual([])
       expect(result.current.isLoading).toBe(false)
@@ -181,7 +182,9 @@ describe('useAGUIChat Hook', () => {
         body: new ReadableStream({
           start(controller) {
             controller.enqueue(
-              new TextEncoder().encode('data: {"topic":"Technology"}\n')
+              new TextEncoder().encode(
+                'data: {"topic":{"headline":"Technology","source":"TechCrunch","url":"https://example.com"}}\n'
+              )
             )
             controller.close()
           },
@@ -195,7 +198,8 @@ describe('useAGUIChat Hook', () => {
         await result.current.startTopicChat()
       })
 
-      expect(result.current.topic).toBe('Technology')
+      expect(result.current.topic?.headline).toBe('Technology')
+      expect(result.current.topics).toHaveLength(1)
       expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/start_chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -220,7 +224,9 @@ describe('useAGUIChat Hook', () => {
         body: new ReadableStream({
           start(controller) {
             controller.enqueue(
-              new TextEncoder().encode('data: {"topic":"Science"}\n')
+              new TextEncoder().encode(
+                'data: {"topic":{"headline":"Science","source":"BBC","url":"https://example.com"}}\n'
+              )
             )
             controller.close()
           },
@@ -559,6 +565,7 @@ describe('useAGUIChat Hook', () => {
       expect(result.current.sessionId).toBeNull()
       expect(result.current.variant).toBeNull()
       expect(result.current.topic).toBeNull()
+      expect(result.current.topics).toEqual([])
       expect(result.current.messages).toEqual([])
       expect(result.current.events).toEqual([])
       expect(result.current.error).toBeNull()

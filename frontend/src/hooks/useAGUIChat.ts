@@ -15,6 +15,12 @@ export interface Expression {
   meaning: string
 }
 
+export interface Topic {
+  headline: string
+  source: string
+  url: string
+}
+
 export interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -31,7 +37,8 @@ export interface ChatEvent {
 export interface UseAGUIChatState {
   sessionId: string | null
   variant: string | null
-  topic: string | null
+  topic: Topic | null
+  topics: Topic[]
   messages: Message[]
   events: ChatEvent[]
   isLoading: boolean
@@ -47,13 +54,39 @@ export interface UseAGUIChatActions {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+const normalizeTopic = (rawTopic: unknown): Topic | null => {
+  if (!rawTopic) return null
+
+  if (typeof rawTopic === 'string') {
+    return {
+      headline: rawTopic,
+      source: '',
+      url: '',
+    }
+  }
+
+  if (typeof rawTopic === 'object' && rawTopic !== null) {
+    const topic = rawTopic as Partial<Topic>
+    if (topic.headline) {
+      return {
+        headline: topic.headline,
+        source: topic.source ?? '',
+        url: topic.url ?? '',
+      }
+    }
+  }
+
+  return null
+}
+
 /**
  * useAGUIChat - Main hook for chat state management and streaming
  */
 export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [variant, setVariant] = useState<string | null>(null)
-  const [topic, setTopic] = useState<string | null>(null)
+  const [topic, setTopic] = useState<Topic | null>(null)
+  const [topics, setTopics] = useState<Topic[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [events, setEvents] = useState<ChatEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -139,8 +172,20 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
             try {
               const data = JSON.parse(line.slice(6))
               if (data.topic) {
-                setTopic(data.topic)
-                addEvent('tool_call', `Selected topic: ${data.topic}`)
+                const normalizedTopic = normalizeTopic(data.topic)
+                if (normalizedTopic) {
+                  setTopics((prev) => {
+                    if (prev.some((item) => item.url && item.url === normalizedTopic.url)) {
+                      return prev
+                    }
+                    if (prev.some((item) => item.headline === normalizedTopic.headline)) {
+                      return prev
+                    }
+                    return [...prev, normalizedTopic]
+                  })
+                  setTopic(normalizedTopic)
+                  addEvent('tool_call', `Selected topic: ${normalizedTopic.headline}`)
+                }
               }
             } catch (e) {
               console.error('Parse error:', e)
@@ -322,6 +367,7 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
     setSessionId(null)
     setVariant(null)
     setTopic(null)
+    setTopics([])
     setMessages([])
     setEvents([])
     setError(null)
@@ -341,6 +387,7 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
     sessionId,
     variant,
     topic,
+    topics,
     messages,
     events,
     isLoading,
