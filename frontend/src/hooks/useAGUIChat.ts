@@ -96,9 +96,10 @@ export const useAGUIChat = (): UseAGUIChatReturn => {
       let assistantContent = '';
 
       if (reader) {
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
+        let readerDone = false;
+        while (!readerDone) {
           const { done, value } = await reader.read();
+          readerDone = done;
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
@@ -121,7 +122,8 @@ export const useAGUIChat = (): UseAGUIChatReturn => {
                   }]);
                 }
               } catch (e) {
-                // Ignore parsing errors for invalid JSON
+                // Ignore malformed SSE data chunks or incomplete JSON during streaming
+                console.debug('SSE parsing error:', e);
               }
             }
           }
