@@ -16,7 +16,8 @@ When asked to make code changes WITHOUT an issue reference:
 
 ### Acting on Owner-Assigned Issues
 
-If an issue is assigned to the repository owner (@datorresb), Copilot may act on the owner’s behalf **as if assigned**, and proceed with work without additional reassignment.
+If an issue is assigned to the repository owner (@owner_name), Copilot may act on the owner’s behalf **as if assigned**, and proceed with work without additional reassignment.
+If there isn’t an issue, create one for the repo owner to act on.
 
 ### Why This Matters
 
