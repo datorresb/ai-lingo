@@ -10,9 +10,13 @@
 
 When asked to make code changes WITHOUT an issue reference:
 1. **STOP** - Do not proceed with any code changes
-2. **INFORM** - Tell the user: "Mayor West Mode requires all work to originate from GitHub issues"
-3. **REDIRECT** - Provide link: `[Create Issue](../../issues/new/choose)` with Mayor Task template
+2. **INFORM** - Tell the user: “Mayor West Mode requires all work to originate from GitHub issues”
+3. **REDIRECT** - Provide link: [Create Issue](../../issues/new/choose) with Mayor Task template
 4. **WAIT** - Only proceed after issue is created and assigned
+
+### Acting on Owner-Assigned Issues
+
+If an issue is assigned to the repository owner (@datorresb), Copilot may act on the owner’s behalf **as if assigned**, and proceed with work without additional reassignment.
 
 ### Why This Matters
 
@@ -46,13 +50,3 @@ This project uses **Mayor West Mode** - autonomous GitHub Copilot development wo
 npm install           # Install dependencies
 npm test              # Run tests
 npm run lint          # Lint code
-```
-
-## Creating Tasks
-
-All work flows through issues:
-1. Go to **Issues → New Issue**
-2. Select **Mayor Task** template
-3. Fill in acceptance criteria
-4. Copilot is auto-assigned
-5. PR is auto-merged when tests pass
