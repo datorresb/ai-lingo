@@ -1,6 +1,7 @@
 """FastAPI application entry point for Expression Learner Agent."""
 
 import json
+import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -10,6 +11,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from src.agents.agent import build_llm, create_agent_workflow
 from src.core.expressions import parse_expressions
+from src.core.llm_validation import classify_llm_exception
 from src.core.models import ChatRequest, Message, SessionRequest, SessionResponse, StartChatRequest, Topic
 from src.core.session_store import create_session, get_session, update_session
 from src.core.rss_client import get_client
@@ -19,6 +21,8 @@ app = FastAPI(
     description="Conversational AI agent for learning English idioms and expressions",
     version="0.1.0",
 )
+
+logger = logging.getLogger(__name__)
 
 # Add CORS middleware
 app.add_middleware(
@@ -57,7 +61,9 @@ async def smoke_check() -> dict:
         llm = build_llm()
         llm.invoke([HumanMessage(content="ping")])
     except Exception as exc:
-        raise HTTPException(status_code=503, detail="LLM unavailable") from exc
+        status_code, detail = classify_llm_exception(exc)
+        logger.warning("LLM smoke check failed", exc_info=exc)
+        raise HTTPException(status_code=status_code, detail=detail) from exc
 
     return {"status": "ok"}
 
@@ -86,7 +92,8 @@ async def start_chat_endpoint(request: StartChatRequest) -> StreamingResponse:
     def topic_stream():
         client = get_client()
         try:
-            topics_by_source = client.get_topics_from_multiple_sources(limit_per_source=3)
+            topics_by_source = client.get_topics_from_multiple_sources(
+                limit_per_source=3)
         except Exception as exc:
             payload = json.dumps({"error": "Failed to fetch topics"})
             yield f"data: {payload}\n\n"
@@ -134,7 +141,8 @@ def _to_core_messages(messages: list[HumanMessage | AIMessage]) -> list[Message]
         if isinstance(message, HumanMessage):
             core_messages.append(Message(role="user", content=message.content))
         elif isinstance(message, AIMessage):
-            core_messages.append(Message(role="assistant", content=message.content))
+            core_messages.append(
+                Message(role="assistant", content=message.content))
     return core_messages
 
 
@@ -168,11 +176,13 @@ async def chat_endpoint(request: ChatRequest) -> StreamingResponse:
 
         messages = result.get("messages", [])
         assistant_message = next(
-            (message for message in reversed(messages) if isinstance(message, AIMessage)), None
+            (message for message in reversed(messages)
+             if isinstance(message, AIMessage)), None
         )
 
         if assistant_message is None:
-            payload = json.dumps({"type": "error", "content": "No assistant response"})
+            payload = json.dumps(
+                {"type": "error", "content": "No assistant response"})
             yield f"data: {payload}\n\n"
             return
 
@@ -182,7 +192,8 @@ async def chat_endpoint(request: ChatRequest) -> StreamingResponse:
             request.session_id,
             messages=updated_messages,
             last_expressions=expressions,
-            turn_count=result.get("turn_count", state.turn_count) or state.turn_count + 1,
+            turn_count=result.get(
+                "turn_count", state.turn_count) or state.turn_count + 1,
         )
 
         thought_payload = json.dumps(
@@ -193,7 +204,8 @@ async def chat_endpoint(request: ChatRequest) -> StreamingResponse:
         text = assistant_message.content
         chunk_size = 40
         for idx in range(0, len(text), chunk_size):
-            payload = json.dumps({"type": "chunk", "content": text[idx : idx + chunk_size]})
+            payload = json.dumps(
+                {"type": "chunk", "content": text[idx: idx + chunk_size]})
             yield f"data: {payload}\n\n"
 
         expr_payload = json.dumps(

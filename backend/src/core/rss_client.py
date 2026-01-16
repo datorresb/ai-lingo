@@ -9,10 +9,10 @@ Refer to Issue #3 for detailed specifications.
 
 import time
 from typing import Optional
-from datetime import datetime, timedelta
-import feedparser
-from src.core.models import Topic
 
+import feedparser
+
+from src.core.models import Topic
 
 # ============================================================================
 # Constants
@@ -179,22 +179,33 @@ class RSSClient:
             feed = feedparser.parse(feed_url)
 
             # Check for feed parsing errors (handle both real feedparser objects and dict mocks)
-            bozo = getattr(feed, 'bozo', feed.get('bozo', False) if isinstance(feed, dict) else False)
+            bozo = getattr(
+                feed,
+                "bozo",
+                feed.get("bozo", False) if isinstance(feed, dict) else False,
+            )
             if bozo:
                 # feedparser.bozo indicates parsing issues but we can still get entries
                 pass
 
             # Get entries and feed info (handle both real feedparser objects and dict mocks)
-            entries = feed.entries if hasattr(feed, 'entries') else feed.get('entries', [])
-            feed_dict = feed.feed if hasattr(feed, 'feed') else feed.get('feed', {})
-            feed_title = feed_dict.get('title', 'Unknown') if isinstance(feed_dict, dict) else getattr(feed_dict, 'title', 'Unknown')
+            entries = feed.entries if hasattr(
+                feed, 'entries') else feed.get('entries', [])
+            feed_dict = feed.feed if hasattr(
+                feed, 'feed') else feed.get('feed', {})
+            feed_title = (
+                feed_dict.get("title", "Unknown")
+                if isinstance(feed_dict, dict)
+                else getattr(feed_dict, "title", "Unknown")
+            )
 
             # Extract topics from feed entries
             topics = []
             for entry in entries[:limit]:
                 try:
                     # Get entry data (handle both real feedparser objects and dict mocks)
-                    entry_dict = entry if isinstance(entry, dict) else vars(entry)
+                    entry_dict = entry if isinstance(
+                        entry, dict) else vars(entry)
                     headline = entry_dict.get('title', '')
                     url = entry_dict.get('link', '')
 
@@ -222,7 +233,8 @@ class RSSClient:
 
         except Exception as e:
             # Wrap network and parsing errors with context
-            raise Exception(f"Failed to fetch RSS feed from {feed_url}: {str(e)}")
+            raise Exception(
+                f"Failed to fetch RSS feed from {feed_url}: {str(e)}")
 
     def get_article_snippet(self, url: str) -> Optional[str]:
         """Get a snippet/summary from an article URL.
@@ -264,7 +276,10 @@ class RSSClient:
             ValueError: If source is not configured
         """
         if source not in self.feeds:
-            raise ValueError(f"Source '{source}' not configured. Available: {list(self.feeds.keys())}")
+            available_sources = list(self.feeds.keys())
+            raise ValueError(
+                f"Source '{source}' not configured. Available: {available_sources}"
+            )
 
         return self.list_topics(self.feeds[source], limit)
 
@@ -286,8 +301,9 @@ class RSSClient:
         results = {}
         for source in sources:
             try:
-                results[source] = self.get_topics_from_source(source, limit_per_source)
-            except Exception as e:
+                results[source] = self.get_topics_from_source(
+                    source, limit_per_source)
+            except Exception:
                 # Log error but continue with other sources
                 results[source] = []
 

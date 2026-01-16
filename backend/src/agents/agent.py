@@ -7,8 +7,10 @@ backed by LangChain and Azure OpenAI.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Callable, Iterable, Optional
 
+from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import AzureChatOpenAI
@@ -18,8 +20,10 @@ from src.agents.state import AgentState
 from src.core.expressions import parse_expressions
 from src.core.rss_client import get_article_snippet, list_topics
 
-
 DEFAULT_API_VERSION = "2024-02-15-preview"
+
+load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[3] / ".env")
 
 
 def build_llm() -> AzureChatOpenAI:
@@ -30,7 +34,8 @@ def build_llm() -> AzureChatOpenAI:
     api_version = os.getenv("AZURE_OPENAI_API_VERSION", DEFAULT_API_VERSION)
 
     if not endpoint or not deployment:
-        raise ValueError("Missing Azure OpenAI configuration in environment variables")
+        raise ValueError(
+            "Missing Azure OpenAI configuration in environment variables")
 
     api_key = os.getenv("AZURE_OPENAI_API_KEY")
     if api_key:
@@ -44,10 +49,12 @@ def build_llm() -> AzureChatOpenAI:
     try:
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
     except ImportError as exc:  # pragma: no cover - exercised in production
-        raise ImportError("azure-identity is required for managed identity auth") from exc
+        raise ImportError(
+            "azure-identity is required for managed identity auth") from exc
 
     credential = DefaultAzureCredential()
-    token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
+    token_provider = get_bearer_token_provider(
+        credential, "https://cognitiveservices.azure.com/.default")
 
     return AzureChatOpenAI(
         azure_endpoint=endpoint,
@@ -93,7 +100,8 @@ def create_agent_node(llm: Callable) -> Callable[[AgentState], dict]:
 
     def agent_node(state: AgentState) -> dict:
         messages: list[BaseMessage] = state["messages"]
-        system_message = build_system_message(state["variant"], state.get("topic"))
+        system_message = build_system_message(
+            state["variant"], state.get("topic"))
         response = llm.invoke([system_message, *messages])
 
         updated_messages = [*messages, response]
@@ -171,7 +179,8 @@ def create_agent_workflow(llm: Optional[Callable] = None):
     workflow.add_node("tools", create_tools_node(tools))
 
     workflow.set_entry_point("agent")
-    workflow.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
+    workflow.add_conditional_edges("agent", should_continue, {
+                                   "tools": "tools", END: END})
     workflow.add_edge("tools", "agent")
 
     return workflow.compile()

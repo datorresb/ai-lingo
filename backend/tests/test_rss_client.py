@@ -4,20 +4,21 @@ Tests cover RSS feed fetching, parsing, caching, error handling,
 and the Topic model integration.
 """
 
-import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock
-from src.core.rss_client import (
-    RSSClient,
-    RSSCache,
-    CacheEntry,
-    list_topics,
-    get_topics_from_source,
-    get_article_snippet,
-    FEED_CONFIG,
-)
-from src.core.models import Topic
+from unittest.mock import Mock, patch
 
+import pytest
+
+from src.core.models import Topic
+from src.core.rss_client import (
+    FEED_CONFIG,
+    CacheEntry,
+    RSSCache,
+    RSSClient,
+    get_article_snippet,
+    get_topics_from_source,
+    list_topics,
+)
 
 # ============================================================================
 # Cache Tests
@@ -387,7 +388,7 @@ class TestRSSClient:
         # Add something to cache
         client.cache.set("key", [])
         assert len(client.cache._cache) > 0
-        
+
         client.clear_cache()
         assert len(client.cache._cache) == 0
 
@@ -395,7 +396,7 @@ class TestRSSClient:
         """Test getting cache statistics."""
         client = RSSClient()
         stats = client.get_cache_stats()
-        
+
         assert isinstance(stats, dict)
         assert "total_entries" in stats
         assert "expired_entries" in stats

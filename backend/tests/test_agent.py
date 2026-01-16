@@ -4,8 +4,8 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from src.agents.agent import create_agent_workflow
 from src.agents.state import create_initial_state
-from src.core.models import Topic
 from src.core import rss_client
+from src.core.models import Topic
 
 
 class FakeLLM:

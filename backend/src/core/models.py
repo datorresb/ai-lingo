@@ -6,10 +6,10 @@ including request/response models for API endpoints and internal domain models.
 Refer to PRD section 5.2 for detailed specifications.
 """
 
-from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Optional
 
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # Expression Models

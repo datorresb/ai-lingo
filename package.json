@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "cd backend && pytest"
+    "test": "cd backend && ./.venv/bin/pytest",
+    "lint": "cd backend && ./.venv/bin/ruff check src tests"
   },
   "dependencies": {
     "mayor-west-mode": "github:shyamsridhar123/MayorWest"

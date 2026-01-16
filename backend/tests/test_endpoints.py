@@ -1,15 +1,16 @@
 """Tests for FastAPI endpoints."""
 
 import os
+
 import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
-from app.main import app
 import app.main as main_module
-from src.core.session_store import get_session, reset_store
+from app.main import app
 from src.core import rss_client
 from src.core.models import Topic
+from src.core.session_store import get_session, reset_store
 
 client = TestClient(app)
 
@@ -77,7 +78,8 @@ def test_start_chat_endpoint_streams_topics(monkeypatch) -> None:
             ]
         }
 
-    monkeypatch.setattr(rss_client.get_client(), "get_topics_from_multiple_sources", fake_topics)
+    monkeypatch.setattr(rss_client.get_client(),
+                        "get_topics_from_multiple_sources", fake_topics)
 
     with client.stream("POST", "/start_chat", json={"session_id": session_id}) as response:
         assert response.status_code == 200
@@ -107,7 +109,8 @@ def test_chat_endpoint_streams_response(monkeypatch) -> None:
                 "turn_count": state["turn_count"] + 1,
             }
 
-    monkeypatch.setattr(main_module, "create_agent_workflow", lambda: FakeWorkflow())
+    monkeypatch.setattr(main_module, "create_agent_workflow",
+                        lambda: FakeWorkflow())
 
     with client.stream(
         "POST",
@@ -124,7 +127,8 @@ def test_chat_endpoint_streams_response(monkeypatch) -> None:
 
 def test_chat_endpoint_invalid_session() -> None:
     """Test /chat returns 404 for unknown session."""
-    response = client.post("/chat", json={"session_id": "missing", "message": "Hi"})
+    response = client.post(
+        "/chat", json={"session_id": "missing", "message": "Hi"})
     assert response.status_code == 404
 
 
@@ -135,3 +139,54 @@ def test_smoke_endpoint_requires_azure_env() -> None:
 
     response = client.get("/smoke")
     assert response.status_code == 200
+
+
+def test_smoke_endpoint_returns_401_for_missing_config(monkeypatch) -> None:
+    def raise_missing_config():
+        raise ValueError(
+            "Missing Azure OpenAI configuration in environment variables")
+
+    monkeypatch.setattr(main_module, "build_llm", raise_missing_config)
+
+    response = client.get("/smoke")
+    assert response.status_code == 401
+    assert "configuration" in response.json()["detail"]
+
+
+def test_smoke_endpoint_returns_403_for_forbidden(monkeypatch) -> None:
+    class ForbiddenError(Exception):
+        status_code = 403
+
+    class FakeLLM:
+        def invoke(self, _messages):
+            raise ForbiddenError("forbidden")
+
+    monkeypatch.setattr(main_module, "build_llm", lambda: FakeLLM())
+
+    response = client.get("/smoke")
+    assert response.status_code == 403
+    assert "permission" in response.json()["detail"]
+
+
+def test_smoke_endpoint_returns_504_for_timeout(monkeypatch) -> None:
+    class FakeLLM:
+        def invoke(self, _messages):
+            raise TimeoutError("timeout")
+
+    monkeypatch.setattr(main_module, "build_llm", lambda: FakeLLM())
+
+    response = client.get("/smoke")
+    assert response.status_code == 504
+    assert "timed out" in response.json()["detail"]
+
+
+def test_smoke_endpoint_returns_502_for_network_error(monkeypatch) -> None:
+    class FakeLLM:
+        def invoke(self, _messages):
+            raise OSError("network down")
+
+    monkeypatch.setattr(main_module, "build_llm", lambda: FakeLLM())
+
+    response = client.get("/smoke")
+    assert response.status_code == 502
+    assert "network" in response.json()["detail"]

@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from src.core.models import AgentState
 
-
 _session_store: dict[str, AgentState] = {}
 _store_lock = Lock()
 

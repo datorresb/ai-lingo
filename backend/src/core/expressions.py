@@ -8,9 +8,9 @@ Refer to PRD section 5.3 for detailed specifications.
 """
 
 import re
-from typing import Generator, Iterable, Optional
-from src.core.models import Expression
+from typing import Generator, Iterable
 
+from src.core.models import Expression
 
 # ============================================================================
 # Constants

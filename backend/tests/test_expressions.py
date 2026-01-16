@@ -4,15 +4,13 @@ Comprehensive tests for parsing, normalizing, validating, and streaming
 expressions from text using [[phrase::meaning]] markup format.
 """
 
-import pytest
 from src.core.expressions import (
+    Expression,
+    normalize_expression,
     parse_expressions,
     stream_expressions,
-    normalize_expression,
     validate_expression,
-    Expression,
 )
-
 
 # ============================================================================
 # Tests for validate_expression

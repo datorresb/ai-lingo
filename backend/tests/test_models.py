@@ -1,17 +1,19 @@
 """Tests for Pydantic domain models."""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.core.models import (
-    Expression,
-    SessionRequest,
-    SessionResponse,
+    AgentState,
     ChatRequest,
     ChatResponse,
+    Expression,
+    Message,
+    SessionRequest,
+    SessionResponse,
     StartChatRequest,
     Topic,
-    Message,
-    AgentState,
 )
 
 
