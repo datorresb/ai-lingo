@@ -20,11 +20,7 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
     e.preventDefault();
     if (isLoading) return;
     
-    try {
-      await onSessionStart(selectedVariant);
-    } catch (err) {
-      // Error is handled by the hook
-    }
+    await onSessionStart(selectedVariant);
   };
 
   const handleRetry = () => {
