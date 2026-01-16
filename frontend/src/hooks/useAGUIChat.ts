@@ -96,13 +96,9 @@ export const useAGUIChat = (): UseAGUIChatReturn => {
       let assistantContent = '';
 
       if (reader) {
-        let readerDone = false;
-        while (!readerDone) {
-          const { done, value } = await reader.read();
-          readerDone = done;
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
+        let result = await reader.read();
+        while (!result.done) {
+          const chunk = decoder.decode(result.value, { stream: true });
           const lines = chunk.split('\n');
 
           for (const line of lines) {
@@ -123,10 +119,13 @@ export const useAGUIChat = (): UseAGUIChatReturn => {
                 }
               } catch (e) {
                 // Ignore malformed SSE data chunks or incomplete JSON during streaming
-                console.debug('SSE parsing error:', e);
+                if (import.meta.env.DEV) {
+                  console.warn('SSE parsing error:', e);
+                }
               }
             }
           }
+          result = await reader.read();
         }
       }
 
