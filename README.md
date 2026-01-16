@@ -132,6 +132,14 @@ ai-lingo/
 
 ## 🚀 Development Workflow (Mayor West Mode)
 
+### Setup (Mayor West Mode)
+
+Run the setup wizard from GitHub:
+
+```bash
+npx github:shyamsridhar123/MayorWest setup
+```
+
 ### Working on an Issue
 
 1. **Read Issue**: Understand acceptance criteria
