@@ -5,12 +5,15 @@ pydantic-settings
 langchain
 langchain-openai
 langgraph
+azure-identity
 python-dotenv
+feedparser
 
 [dev]
 pytest
 pytest-cov
 pytest-asyncio
+pytest-mock
 black
 ruff
 mypy

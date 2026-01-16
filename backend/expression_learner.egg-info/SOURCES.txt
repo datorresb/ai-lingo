@@ -5,4 +5,8 @@ expression_learner.egg-info/dependency_links.txt
 expression_learner.egg-info/requires.txt
 expression_learner.egg-info/top_level.txt
 src/__init__.py
+tests/test_agent.py
 tests/test_endpoints.py
+tests/test_expressions.py
+tests/test_models.py
+tests/test_rss_client.py

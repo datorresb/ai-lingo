@@ -12,11 +12,14 @@ Requires-Dist: pydantic-settings
 Requires-Dist: langchain
 Requires-Dist: langchain-openai
 Requires-Dist: langgraph
+Requires-Dist: azure-identity
 Requires-Dist: python-dotenv
+Requires-Dist: feedparser
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pytest-cov; extra == "dev"
 Requires-Dist: pytest-asyncio; extra == "dev"
+Requires-Dist: pytest-mock; extra == "dev"
 Requires-Dist: black; extra == "dev"
 Requires-Dist: ruff; extra == "dev"
 Requires-Dist: mypy; extra == "dev"
