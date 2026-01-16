@@ -29,7 +29,7 @@ export interface Message {
 }
 
 export interface ChatEvent {
-  type: 'thought' | 'tool_call' | 'response'
+  type: 'thought' | 'tool_call' | 'tool_result' | 'state_update' | 'response'
   content: string
   timestamp: Date
 }
@@ -126,6 +126,28 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
     []
   )
 
+  const serializeEventContent = useCallback((value: unknown): string => {
+    if (typeof value === 'string') return value
+    if (value === undefined || value === null) return ''
+    try {
+      return JSON.stringify(value, null, 2)
+    } catch (e) {
+      return String(value)
+    }
+  }, [])
+
+  const addEvent = useCallback(
+    (type: ChatEvent['type'], content: unknown): void => {
+      const event: ChatEvent = {
+        type,
+        content: serializeEventContent(content),
+        timestamp: new Date(),
+      }
+      setEvents((prev) => [...prev, event])
+    },
+    [serializeEventContent]
+  )
+
   /**
    * Start chat with topic generation from RSS feeds
    */
@@ -203,7 +225,7 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
       setIsLoading(false)
       abortControllerRef.current = null
     }
-  }, [sessionId])
+  }, [sessionId, addEvent])
 
   /**
    * Extract expressions from text using [[phrase::meaning]] format
@@ -221,18 +243,6 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
     }
 
     return expressions
-  }
-
-  /**
-   * Add event to events log
-   */
-  const addEvent = (type: ChatEvent['type'], content: string) => {
-    const event: ChatEvent = {
-      type,
-      content,
-      timestamp: new Date(),
-    }
-    setEvents((prev) => [...prev, event])
   }
 
   /**
@@ -264,6 +274,16 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
             // Handle different event types
             if (data.type === 'thought') {
               addEvent('thought', data.content)
+            } else if (data.type === 'tool_call') {
+              addEvent('tool_call', data.content ?? data)
+            } else if (data.type === 'tool_result') {
+              addEvent('tool_result', data.content ?? data)
+            } else if (data.type === 'state_update') {
+              addEvent('state_update', data.content ?? data)
+            } else if (data.type === 'assistant_message') {
+              addEvent('response', data.content ?? data)
+            } else if (data.type === 'response') {
+              addEvent('response', data.content ?? data)
             } else if (data.type === 'chunk') {
               // Stream text chunk
               assistantContent += data.content
@@ -280,6 +300,9 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
                 expressions: extractedExpressions,
               }
               setMessages((prev) => [...prev, assistantMsg])
+              if (assistantContent) {
+                addEvent('response', assistantContent)
+              }
               assistantContent = ''
               extractedExpressions = []
             }
@@ -300,7 +323,7 @@ export function useAGUIChat(): UseAGUIChatState & UseAGUIChatActions {
       }
       setMessages((prev) => [...prev, assistantMsg])
     }
-  }, [])
+  }, [addEvent])
 
   /**
    * Send message and stream response
