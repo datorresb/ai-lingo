@@ -38,6 +38,7 @@ function parseMarkdown(content: string): string {
   let inCodeBlock = false;
   let codeBlockContent = '';
   let inList = false;
+  let listType: 'ul' | 'ol' | null = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -45,7 +46,11 @@ function parseMarkdown(content: string): string {
     // Code blocks (```)
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
-        processedLines.push(`<pre><code>${codeBlockContent}</code></pre>`);
+        // Remove trailing newline from code block content
+        const trimmedCode = codeBlockContent.endsWith('\n') 
+          ? codeBlockContent.slice(0, -1) 
+          : codeBlockContent;
+        processedLines.push(`<pre><code>${trimmedCode}</code></pre>`);
         codeBlockContent = '';
         inCodeBlock = false;
       } else {
@@ -61,8 +66,9 @@ function parseMarkdown(content: string): string {
 
     // Close list if we're no longer in list items
     if (inList && !line.trim().match(/^[*\-+]\s/) && !line.trim().match(/^\d+\.\s/)) {
-      processedLines.push('</ul>');
+      processedLines.push(`</${listType}>`);
       inList = false;
+      listType = null;
     }
 
     // Headings (# - ######)
@@ -77,9 +83,13 @@ function parseMarkdown(content: string): string {
     // Unordered lists (*, -, +)
     const unorderedListMatch = line.match(/^[*\-+]\s+(.+)$/);
     if (unorderedListMatch) {
-      if (!inList) {
+      if (!inList || listType !== 'ul') {
+        if (inList) {
+          processedLines.push(`</${listType}>`);
+        }
         processedLines.push('<ul>');
         inList = true;
+        listType = 'ul';
       }
       processedLines.push(`<li>${unorderedListMatch[1]}</li>`);
       continue;
@@ -88,9 +98,13 @@ function parseMarkdown(content: string): string {
     // Ordered lists (1., 2., etc.)
     const orderedListMatch = line.match(/^\d+\.\s+(.+)$/);
     if (orderedListMatch) {
-      if (!inList) {
+      if (!inList || listType !== 'ol') {
+        if (inList) {
+          processedLines.push(`</${listType}>`);
+        }
         processedLines.push('<ol>');
         inList = true;
+        listType = 'ol';
       }
       processedLines.push(`<li>${orderedListMatch[1]}</li>`);
       continue;
@@ -115,17 +129,17 @@ function parseMarkdown(content: string): string {
 
   // Close list if still open
   if (inList) {
-    processedLines.push('</ul>');
+    processedLines.push(`</${listType}>`);
   }
 
   html = processedLines.join('\n');
 
-  // Inline markdown (bold, italic, code, links)
-  // Bold (**text** or __text__)
+  // Inline markdown (process in order to avoid conflicts)
+  // Bold first (**text** or __text__)
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
 
-  // Italic (*text* or _text_)
+  // Then italic (*text* or _text_)
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   html = html.replace(/_(.+?)_/g, '<em>$1</em>');
 
