@@ -51,9 +51,7 @@ function parseMarkdown(content: string): string {
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         // Remove trailing newline from code block content
-        const trimmedCode = codeBlockContent.endsWith('\n') 
-          ? codeBlockContent.slice(0, -1) 
-          : codeBlockContent;
+        const trimmedCode = codeBlockContent.trimEnd();
         processedLines.push(`<pre><code>${trimmedCode}</code></pre>`);
         codeBlockContent = '';
         inCodeBlock = false;
@@ -69,7 +67,8 @@ function parseMarkdown(content: string): string {
     }
 
     // Close list if we're no longer in list items
-    if (inList && !line.trim().match(UNORDERED_LIST_REGEX) && !line.trim().match(ORDERED_LIST_REGEX)) {
+    const trimmedLine = line.trim();
+    if (inList && !trimmedLine.match(UNORDERED_LIST_REGEX) && !trimmedLine.match(ORDERED_LIST_REGEX)) {
       processedLines.push(`</${listType}>`);
       inList = false;
       listType = null;
