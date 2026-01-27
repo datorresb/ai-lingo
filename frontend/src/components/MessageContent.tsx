@@ -22,6 +22,10 @@ function escapeHtml(text: string): string {
 function parseMarkdown(content: string): string {
   let html = content;
 
+  // List detection patterns
+  const UNORDERED_LIST_REGEX = /^[*\-+]\s/;
+  const ORDERED_LIST_REGEX = /^\d+\.\s/;
+
   // First, protect ExpressionText highlights from markdown processing
   const expressionTexts: string[] = [];
   html = html.replace(/\[\[(.+?)::(.+?)\]\]/g, (match) => {
@@ -65,7 +69,7 @@ function parseMarkdown(content: string): string {
     }
 
     // Close list if we're no longer in list items
-    if (inList && !line.trim().match(/^[*\-+]\s/) && !line.trim().match(/^\d+\.\s/)) {
+    if (inList && !line.trim().match(UNORDERED_LIST_REGEX) && !line.trim().match(ORDERED_LIST_REGEX)) {
       processedLines.push(`</${listType}>`);
       inList = false;
       listType = null;
@@ -135,19 +139,23 @@ function parseMarkdown(content: string): string {
   html = processedLines.join('\n');
 
   // Inline markdown (process in order to avoid conflicts)
-  // Bold first (**text** or __text__)
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  // Bold first (**text** or __text__) - don't cross line boundaries
+  html = html.replace(/\*\*([^\n*]+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^\n_]+?)__/g, '<strong>$1</strong>');
 
-  // Then italic (*text* or _text_)
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+  // Then italic (*text* or _text_) - don't cross line boundaries
+  html = html.replace(/\*([^\n*]+?)\*/g, '<em>$1</em>');
+  html = html.replace(/_([^\n_]+?)_/g, '<em>$1</em>');
 
-  // Inline code (`code`)
-  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+  // Inline code (`code`) - don't cross line boundaries
+  html = html.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
 
-  // Links ([text](url))
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Links ([text](url)) - validate URL for security
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text, url) => {
+    // Only allow safe protocols
+    const sanitizedUrl = url.match(/^https?:\/\/|^mailto:/) ? url : '#';
+    return `<a href="${sanitizedUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  });
 
   // Restore ExpressionText highlights and convert to interactive elements
   html = html.replace(/§§§EXPR(\d+)§§§/g, (_, index) => {
