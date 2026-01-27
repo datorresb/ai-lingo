@@ -26,7 +26,7 @@ function parseMarkdown(content: string): string {
   const expressionTexts: string[] = [];
   html = html.replace(/\[\[(.+?)::(.+?)\]\]/g, (match) => {
     const index = expressionTexts.push(match) - 1;
-    return `__EXPR_${index}__`;
+    return `§§§EXPR${index}§§§`;
   });
 
   // Escape HTML to prevent XSS
@@ -136,7 +136,7 @@ function parseMarkdown(content: string): string {
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
   // Restore ExpressionText highlights and convert to interactive elements
-  html = html.replace(/__EXPR_(\d+)__/g, (_, index) => {
+  html = html.replace(/§§§EXPR(\d+)§§§/g, (_, index) => {
     const expr = expressionTexts[parseInt(index)];
     const match = expr.match(/\[\[(.+?)::(.+?)\]\]/);
     if (match) {
