@@ -1,0 +1,137 @@
+.message-content-markdown {
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+/* Headings */
+.message-content-markdown h1 {
+  font-size: 1.8em;
+  font-weight: 600;
+  margin: 0.5em 0;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.3em;
+}
+
+.message-content-markdown h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.5em 0;
+}
+
+.message-content-markdown h3 {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin: 0.5em 0;
+}
+
+.message-content-markdown h4,
+.message-content-markdown h5,
+.message-content-markdown h6 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.message-content-markdown ul,
+.message-content-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.message-content-markdown li {
+  margin: 0.25em 0;
+}
+
+/* Code */
+.message-content-markdown code {
+  background-color: #f4f4f4;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.message-content-markdown pre {
+  background-color: #f4f4f4;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.message-content-markdown pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.95em;
+}
+
+/* Blockquotes */
+.message-content-markdown blockquote {
+  border-left: 4px solid #4a90e2;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #555;
+  font-style: italic;
+}
+
+/* Links */
+.message-content-markdown a {
+  color: #4a90e2;
+  text-decoration: none;
+}
+
+.message-content-markdown a:hover {
+  text-decoration: underline;
+}
+
+/* Bold and Italic */
+.message-content-markdown strong {
+  font-weight: 600;
+}
+
+.message-content-markdown em {
+  font-style: italic;
+}
+
+/* ExpressionText highlights */
+.message-content-markdown .expression-text {
+  background-color: #fff3cd;
+  border-bottom: 2px dotted #ffc107;
+  padding: 0 2px;
+  cursor: help;
+  position: relative;
+  font-weight: 500;
+}
+
+.message-content-markdown .expression-text:hover {
+  background-color: #ffeb9c;
+}
+
+/* Tooltip for ExpressionText */
+.message-content-markdown .expression-text::after {
+  content: attr(data-meaning);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 0.5em 0.75em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  margin-bottom: 5px;
+  z-index: 1000;
+  max-width: 300px;
+  white-space: normal;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.message-content-markdown .expression-text:hover::after {
+  opacity: 1;
+}
