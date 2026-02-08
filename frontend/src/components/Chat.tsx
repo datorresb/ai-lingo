@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chat.css';
+import MessageContent from './MessageContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -58,9 +59,13 @@ const Chat: React.FC<ChatProps> = ({ messages, onSendMessage, isLoading, session
             key={index}
             className={`chat-message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
           >
-            <div className="message-content">
-              {message.content}
-            </div>
+            {message.role === 'assistant' ? (
+              <MessageContent content={message.content} />
+            ) : (
+              <div className="message-content">
+                {message.content}
+              </div>
+            )}
             <div className="message-timestamp">
               {formatTime(message.timestamp)}
             </div>
